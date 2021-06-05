@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+{% block title %}{% endblock %}
+{% block body %}
+{{ form(categoryForm) }}
+{% for category in categories %}
+{{ category.name }}
+{% endfor %}
+
+{% for subCategory in subCategories %}
+{{ subCategory.name }}
+{% endfor %}
+
+{% for subSubCategory in subSubCategories %}
+{{ subSubCategory.name }}
+{% endfor %}
+
+{{ form(subCategoryForm) }}
+{% endblock %}
