@@ -23,39 +23,72 @@ class HomeController extends AbstractController
      */
     public function index(Request $request, CategoryRepository $categoryRepository, SubCategoryRepository $subCategoryRepository, SubSubCategoryRepository $subSubCategoryRepository): Response
     {
+        $category = array();
+        $subCategory = array();
+        $subSubCategory = array();
+        $error = '';
+
         $categoryForm = $this->createFormBuilder()
-            ->add('name', TextType::class,  ['label' => 'Famille'])
+            ->add('category', TextType::class,  ['label' => 'Famille', 'required' => false])
+            ->add('subCategory', TextType::class,  ['label' => 'Sous Famille', 'required' => false])
+            ->add('subSubCategory', TextType::class,  ['label' => 'Sous Sous Famille', 'required' => false])
             ->add('submit', SubmitType::class)
             ->getForm();
 
-        $subCategoryForm = $this->createFormBuilder()
-            ->add('name', TextType::class,  ['label' => 'Sous Famille'])
-            ->add('submit', SubmitType::class)
-            ->getForm();
-        
         $categoryForm->handleRequest($request);
         if ($categoryForm->isSubmitted() && $categoryForm->isValid()) {
             // $form->getData() holds the submitted values
-            $inputCategory =str_replace(' ', '', strtolower($categoryForm->getData()['name']));
+            $inputCategory =strtolower($categoryForm->getData()['category']);
+            $inputSubCategory =strtolower($categoryForm->getData()['subCategory']);
+            $inputSubSubCategory =strtolower($categoryForm->getData()['subSubCategory']);
             //dump($value['name']);
+            dump($inputSubSubCategory);
             $category = $categoryRepository->findBy(
                 ['name' => $inputCategory],
             );
-            $subCategoryAnswer = $subCategoryRepository->findBy(
-                ['category' => $category],
+            $subCategory = $subCategoryRepository->findBy(
+                ['name' => $inputSubCategory],
             );
-            $subSubCategory = [];
-            for($i = 0; $i <= count($subCategoryAnswer)-1; $i++) {
-                //dump($subCategoryAnswer[$i]);
-                $subSubCategoryAnswer = $subSubCategoryRepository->findBy(
-                    ['subCategory' => $subCategoryAnswer[$i]],
+            $subSubCategory = $subSubCategoryRepository->findBy(
+                ['name' =>$inputSubSubCategory],
+            );
+
+            if (!empty($category)) {
+                $subCategory = $subCategoryRepository->findBy(
+                    ['category' => $category],
                 );
-                $subSubCategory= array_merge($subSubCategory, $subSubCategoryAnswer);
-                
+
+                for($i = 0; $i <= count($subCategory)-1; $i++) {
+                    //dump($subCategoryAnswer[$i]);
+                    $subSubCategoryAnswer = $subSubCategoryRepository->findBy(
+                        ['subCategory' => $subCategory[$i]],
+                    );
+                    $subSubCategory= array_merge($subSubCategory, $subSubCategoryAnswer);
+                    
+                }
+
+            } elseif (!empty($subCategory)) {
+                $category = $categoryRepository->findBy(
+                    ['id' => $subCategory[0]->getCategory()->getId()],
+                );
+
+                $subSubCategory = $subSubCategoryRepository->findBy(
+                    ['subCategory' => $subCategory],
+                );
+
+            } elseif (!empty($subSubCategory)) {
+                $subCategory = $subCategoryRepository->findBy(
+                    ['id' => $subSubCategory[0]->getSubCategory()->getId()],
+                );
+                $category = $categoryRepository->findBy(
+                    ['id' => $subCategory[0]->getCategory()->getId()],
+                );
+            } else {
+                $error = 'aucune correspondance trouvée';
             }
-            
+
         }
-        $subCategoryForm->handleRequest($request);
+        /**$subCategoryForm->handleRequest($request);
         if ($subCategoryForm->isSubmitted() && $subCategoryForm->isValid()) {
             // $form->getData() holds the submitted values
             $inputSubcategory =str_replace(' ', '', strtolower($subCategoryForm->getData()['name']));
@@ -76,7 +109,7 @@ class HomeController extends AbstractController
                $subSubCategory= array_merge($subSubCategory, $subSubCategoryAnswer);
 
             }
-        }
+        }*/
             // ... perform some action, such as saving the task to the database
             // for example, if Task is a Doctrine entity, save it!
             // $entityManager = $this->getDoctrine()->getManager();
@@ -86,11 +119,11 @@ class HomeController extends AbstractController
             //return $this->redirectToRoute('task_success');
         return $this->render('home/index.html.twig', [
             'controller_name' => 'HomeController',
-            'categoryForm' => $categoryForm->CreateView(),
-            'subCategoryForm' => $subCategoryForm->CreateView(),
+            'form' => $categoryForm->CreateView(),
             'categories' =>  $category,
-            'subCategories' => $subCategoryAnswer,
+            'subCategories' => $subCategory,
             'subSubCategories' => $subSubCategory,
+            'error' => $error,
         ]);
     }
 }

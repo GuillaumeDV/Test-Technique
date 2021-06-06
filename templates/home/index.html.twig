@@ -1,18 +1,37 @@
 {% extends 'base.html.twig' %}
 {% block title %}{% endblock %}
 {% block body %}
-{{ form(categoryForm) }}
+{% set categoryInput = '' %}
+{% if categories|length %}
+{% set categoryInput = categories[0].name %}
+{% endif %}
+{% set subCategoryInput = '' %}
+
+{% if subCategories[1] is not defined  %}
+    {% if subCategories|length %}
+    {% set subCategoryInput = subCategories[0].name %}
+    {% endif %}
+{% endif %}
+
+{{ form_start(form) }}
+    {{form_row(form.category, {'value': categoryInput}) }}
+    {{form_row(form.subCategory, {'value': subCategoryInput}) }}
+    {{form_row(form.subSubCategory) }}
+{{ form_end(form) }}
+<br>
+La catégorie : 
 {% for category in categories %}
 {{ category.name }}
 {% endfor %}
-
+<br>
+La/les sous catégorie(s) : 
 {% for subCategory in subCategories %}
-{{ subCategory.name }}
+{{ subCategory.name }}, 
 {% endfor %}
-
+<br>
+La/les sous sous catégorie(s) : 
 {% for subSubCategory in subSubCategories %}
-{{ subSubCategory.name }}
+{{ subSubCategory.name }}, 
 {% endfor %}
 
-{{ form(subCategoryForm) }}
 {% endblock %}
