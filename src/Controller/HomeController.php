@@ -21,8 +21,13 @@ class HomeController extends AbstractController
     /**
      * @Route("/", name="home")
      */
-    public function index(Request $request, CategoryRepository $categoryRepository, SubCategoryRepository $subCategoryRepository, SubSubCategoryRepository $subSubCategoryRepository): Response
-    {
+    public function index(
+        Request $request,
+        CategoryRepository $categoryRepository,
+        SubCategoryRepository $subCategoryRepository,
+        SubSubCategoryRepository $subSubCategoryRepository
+        ): Response {
+        
         $category = array();
         $subCategory = array();
         $subSubCategory = array();
@@ -36,13 +41,12 @@ class HomeController extends AbstractController
             ->getForm();
 
         $categoryForm->handleRequest($request);
+
         if ($categoryForm->isSubmitted() && $categoryForm->isValid()) {
-            // $form->getData() holds the submitted values
-            $inputCategory =strtolower($categoryForm->getData()['category']);
-            $inputSubCategory =strtolower($categoryForm->getData()['subCategory']);
-            $inputSubSubCategory =strtolower($categoryForm->getData()['subSubCategory']);
-            //dump($value['name']);
-            dump($inputSubSubCategory);
+            $inputCategory =str_replace('?', 'e', mb_convert_encoding(strtolower($categoryForm->getData()['category']), "utf8"));
+            $inputSubCategory =str_replace('?', 'e', mb_convert_encoding(strtolower($categoryForm->getData()['subCategory']), "utf8"));
+            $inputSubSubCategory =str_replace('?', 'e', mb_convert_encoding(strtolower($categoryForm->getData()['subSubCategory']), "utf8"));
+
             $category = $categoryRepository->findBy(
                 ['name' => $inputCategory],
             );
@@ -59,7 +63,6 @@ class HomeController extends AbstractController
                 );
 
                 for($i = 0; $i <= count($subCategory)-1; $i++) {
-                    //dump($subCategoryAnswer[$i]);
                     $subSubCategoryAnswer = $subSubCategoryRepository->findBy(
                         ['subCategory' => $subCategory[$i]],
                     );
@@ -88,35 +91,7 @@ class HomeController extends AbstractController
             }
 
         }
-        /**$subCategoryForm->handleRequest($request);
-        if ($subCategoryForm->isSubmitted() && $subCategoryForm->isValid()) {
-            // $form->getData() holds the submitted values
-            $inputSubcategory =str_replace(' ', '', strtolower($subCategoryForm->getData()['name']));
-            //dump($value['name']);
-            $subCategory = $subCategoryRepository->findBy(
-                ['name' => $inputSubcategory],
-            );
-            dump($subCategory);
-            $subCategoryAnswer = $subCategoryRepository->findBy(
-                ['category' => $category],
-            );
-            $subSubCategory = [];
-            for($i = 0; $i <= count($subCategoryAnswer)-1; $i++) {
-                //dump($subCategoryAnswer[$i]);
-                $subSubCategoryAnswer = $subSubCategoryRepository->findBy(
-                    ['subCategory' => $subCategoryAnswer[$i]],
-                );
-               $subSubCategory= array_merge($subSubCategory, $subSubCategoryAnswer);
 
-            }
-        }*/
-            // ... perform some action, such as saving the task to the database
-            // for example, if Task is a Doctrine entity, save it!
-            // $entityManager = $this->getDoctrine()->getManager();
-            // $entityManager->persist($task);
-            // $entityManager->flush();
-
-            //return $this->redirectToRoute('task_success');
         return $this->render('home/index.html.twig', [
             'controller_name' => 'HomeController',
             'form' => $categoryForm->CreateView(),
